@@ -1,0 +1,1338 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/cloud_storage/v1/chunk.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "chunk"
+    },
+    {
+      "name": "file"
+    },
+    {
+      "name": "share"
+    },
+    {
+      "name": "user"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/file/upload": {
+      "post": {
+        "operationId": "file_FileUpload",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FileUploadRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/FileUploadHTTPResponse"
+            }
+          }
+        },
+        "summary": "文件上传",
+        "tags": [
+          "file"
+        ]
+      }
+    },
+    "/file/upload/chunk": {
+      "post": {
+        "operationId": "chunk_FileUploadChunk",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FileUploadChunkRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/FileUploadChunkHTTPResponse"
+            }
+          }
+        },
+        "summary": "文件分片上传",
+        "tags": [
+          "chunk"
+        ]
+      }
+    },
+    "/file/upload/chunk/complete": {
+      "post": {
+        "operationId": "chunk_FileUploadChunkComplete",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FileUploadChunkCompleteRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/FileUploadChunkCompleteHTTPResponse"
+            }
+          }
+        },
+        "summary": "文件分片上传完成",
+        "tags": [
+          "chunk"
+        ]
+      }
+    },
+    "/file/upload/prepare": {
+      "post": {
+        "operationId": "chunk_FileUploadPrepare",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FileUploadPrepareRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/FileUploadPrepareHTTPResponse"
+            }
+          }
+        },
+        "summary": "文件上传前基本信息处理",
+        "tags": [
+          "chunk"
+        ]
+      }
+    },
+    "/mail/code/send/register": {
+      "post": {
+        "operationId": "user_MailCodeSendRegister",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MailCodeSendRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/MailCodeSendHTTPResponse"
+            }
+          }
+        },
+        "summary": "验证码发送",
+        "tags": [
+          "user"
+        ]
+      }
+    },
+    "/refresh/authorization": {
+      "post": {
+        "operationId": "user_RefreshAuthorization",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RefreshAuthorizationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/RefreshAuthorizationHTTPResponse"
+            }
+          }
+        },
+        "summary": "刷新Authorization",
+        "tags": [
+          "user"
+        ]
+      }
+    },
+    "/share/basic/create": {
+      "post": {
+        "operationId": "share_ShareBasicCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ShareBasicCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ShareBasicCreateHTTPResponse"
+            }
+          }
+        },
+        "summary": "创建分享记录",
+        "tags": [
+          "share"
+        ]
+      }
+    },
+    "/share/basic/detail": {
+      "get": {
+        "operationId": "share_ShareBasicDetail",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "identity",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ShareBasicDetailHTTPResponse"
+            }
+          }
+        },
+        "summary": "获取资源详情",
+        "tags": [
+          "share"
+        ]
+      }
+    },
+    "/share/basic/save": {
+      "post": {
+        "operationId": "share_ShareBasicSave",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ShareBasicSaveRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ShareBasicSaveHTTPResponse"
+            }
+          }
+        },
+        "summary": "资源保存",
+        "tags": [
+          "share"
+        ]
+      }
+    },
+    "/user/detail": {
+      "post": {
+        "operationId": "user_UserDetail",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserDetailRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UserDetailHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户详情",
+        "tags": [
+          "user"
+        ]
+      }
+    },
+    "/user/file/delete": {
+      "delete": {
+        "operationId": "file_UserFileDelete",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "identity",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UserFileDeleteHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户-文件删除",
+        "tags": [
+          "file"
+        ]
+      }
+    },
+    "/user/file/list": {
+      "post": {
+        "operationId": "file_UserFileList",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserFileListRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UserFileListHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户文件列表",
+        "tags": [
+          "file"
+        ]
+      }
+    },
+    "/user/file/move": {
+      "put": {
+        "operationId": "file_UserFileMove",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserFileMoveRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UserFileMoveHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户-文件移动",
+        "tags": [
+          "file"
+        ]
+      }
+    },
+    "/user/file/name/update": {
+      "post": {
+        "operationId": "file_UserFileNameUpdate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserFileNameUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UserFileNameUpdateHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户文件名称修改",
+        "tags": [
+          "file"
+        ]
+      }
+    },
+    "/user/folder/create": {
+      "post": {
+        "operationId": "file_UserFolderCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserFolderCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UserFolderCreateHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户-文件夹创建",
+        "tags": [
+          "file"
+        ]
+      }
+    },
+    "/user/folder/list": {
+      "post": {
+        "operationId": "file_UserFolderList",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserFolderListRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UserFolderListHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户文件夹列表",
+        "tags": [
+          "file"
+        ]
+      }
+    },
+    "/user/login": {
+      "post": {
+        "operationId": "user_UserLogin",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LoginRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/LoginHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户登录",
+        "tags": [
+          "user"
+        ]
+      }
+    },
+    "/user/register": {
+      "post": {
+        "operationId": "user_UserRegister",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserRegisterRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UserRegisterHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户注册",
+        "tags": [
+          "user"
+        ]
+      }
+    },
+    "/user/repository/save": {
+      "post": {
+        "operationId": "file_UserRepositorySave",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserRepositorySaveRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/UserRepositorySaveHTTPResponse"
+            }
+          }
+        },
+        "summary": "用户文件的关联存储",
+        "tags": [
+          "file"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "CosObject": {
+      "properties": {
+        "etag": {
+          "type": "string"
+        },
+        "partNumber": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadChunkCompleteHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/FileUploadChunkCompleteReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadChunkCompleteReply": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadChunkCompleteRequest": {
+      "properties": {
+        "cosObjects": {
+          "items": {
+            "$ref": "#/definitions/CosObject",
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "ext": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "md5": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "uploadId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadChunkHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/FileUploadChunkReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadChunkReply": {
+      "properties": {
+        "etag": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadChunkRequest": {
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "partNumber": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "uploadId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/FileUploadReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadPrepareHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/FileUploadPrepareReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadPrepareReply": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "uploadId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadPrepareRequest": {
+      "properties": {
+        "ext": {
+          "type": "string"
+        },
+        "md5": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadReply": {
+      "properties": {
+        "ext": {
+          "type": "string"
+        },
+        "identity": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "FileUploadRequest": {
+      "properties": {
+        "ext": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "LoginHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/LoginReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "LoginReply": {
+      "properties": {
+        "refreshToken": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "LoginRequest": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "MailCodeSendHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/MailCodeSendReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "MailCodeSendReply": {
+      "type": "object"
+    },
+    "MailCodeSendRequest": {
+      "properties": {
+        "email": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "RefreshAuthorizationHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/RefreshAuthorizationReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "RefreshAuthorizationReply": {
+      "properties": {
+        "refreshToken": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "RefreshAuthorizationRequest": {
+      "type": "object"
+    },
+    "ShareBasicCreateHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/ShareBasicCreateReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ShareBasicCreateReply": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ShareBasicCreateRequest": {
+      "properties": {
+        "expiredTime": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "userRepositoryIdentity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ShareBasicDetailHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/ShareBasicDetailReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ShareBasicDetailReply": {
+      "properties": {
+        "ext": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "repositoryIdentity": {
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "ShareBasicSaveHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/ShareBasicSaveReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ShareBasicSaveReply": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ShareBasicSaveRequest": {
+      "properties": {
+        "parentId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "repositoryIdentity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserDetailHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UserDetailReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserDetailReply": {
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserDetailRequest": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFile": {
+      "properties": {
+        "ext": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "identity": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "repositoryIdentity": {
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "UserFileDeleteHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UserFileDeleteReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFileDeleteReply": {
+      "type": "object"
+    },
+    "UserFileListHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UserFileListReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFileListReply": {
+      "properties": {
+        "count": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "list": {
+          "items": {
+            "$ref": "#/definitions/UserFile",
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "UserFileListRequest": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        },
+        "page": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "size": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "UserFileMoveHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UserFileMoveReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFileMoveReply": {
+      "type": "object"
+    },
+    "UserFileMoveRequest": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        },
+        "parentIdentity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFileNameUpdateHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UserFileNameUpdateReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFileNameUpdateReply": {
+      "type": "object"
+    },
+    "UserFileNameUpdateRequest": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFolder": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFolderCreateHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UserFolderCreateReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFolderCreateReply": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFolderCreateRequest": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "parentId": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "UserFolderListHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UserFolderListReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserFolderListReply": {
+      "properties": {
+        "list": {
+          "items": {
+            "$ref": "#/definitions/UserFolder",
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "UserFolderListRequest": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserRegisterHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UserRegisterReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserRegisterReply": {
+      "type": "object"
+    },
+    "UserRegisterRequest": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserRepositorySaveHTTPResponse": {
+      "properties": {
+        "code": {
+          "description": "Business status code",
+          "format": "int32",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UserRepositorySaveReply"
+        },
+        "msg": {
+          "description": "Response message description",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UserRepositorySaveReply": {
+      "type": "object"
+    },
+    "UserRepositorySaveRequest": {
+      "properties": {
+        "ext": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parentId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "repositoryIdentity": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "protobufAny": {
+      "additionalProperties": {},
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "rpcStatus": {
+      "properties": {
+        "code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "details": {
+          "items": {
+            "$ref": "#/definitions/protobufAny",
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  }
+}

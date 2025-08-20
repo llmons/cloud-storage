@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+
+option go_package = "cloud_storage/api/user/v1;v1";
+
+// ---------------------- Service 定义 ----------------------
+
+service user {
+  // 用户登录
+  rpc UserLogin(LoginRequest) returns (LoginReply) {
+    option (google.api.http) = {
+      post: "/user/login"
+      body: "*"
+    };
+  }
+
+  // 用户详情
+  rpc UserDetail(UserDetailRequest) returns (UserDetailReply) {
+    option (google.api.http) = {
+      post: "/user/detail"
+      body: "*"
+    };
+  }
+
+  // 验证码发送
+  rpc MailCodeSendRegister(MailCodeSendRequest) returns (MailCodeSendReply) {
+    option (google.api.http) = {
+      post: "/mail/code/send/register"
+      body: "*"
+    };
+  }
+
+  // 用户注册
+  rpc UserRegister(UserRegisterRequest) returns (UserRegisterReply) {
+    option (google.api.http) = {
+      post: "/user/register"
+      body: "*"
+    };
+  }
+
+  // 刷新Authorization
+  rpc RefreshAuthorization(RefreshAuthorizationRequest) returns (RefreshAuthorizationReply) {
+    option (google.api.http) = {
+      post: "/refresh/authorization"
+      body: "*"
+    };
+  }
+}
+
+// ---------------------- Messages 定义 ----------------------
+
+message RefreshAuthorizationRequest {}
+
+message RefreshAuthorizationReply {
+  string token = 1;
+  string refresh_token = 2;
+}
+
+message UserRegisterRequest {
+  string name = 1;
+  string password = 2;
+  string email = 3;
+  string code = 4;
+}
+
+message UserRegisterReply {}
+
+message LoginRequest {
+  string name = 1;
+  string password = 2;
+}
+
+message LoginReply {
+  string token = 1;
+  string refresh_token = 2;
+}
+
+message UserDetailRequest {
+  string identity = 1;
+}
+
+message UserDetailReply {
+  string name = 1;
+  string email = 2;
+}
+
+message MailCodeSendRequest {
+  string email = 1;
+}
+
+message MailCodeSendReply {}

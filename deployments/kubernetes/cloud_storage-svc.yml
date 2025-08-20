@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-storage-svc
+  namespace: cloud-storage
+spec:
+  selector:
+    app: cloud-storage
+  type: ClusterIP
+  ports:
+    - name: cloud-storage-svc-http-port
+      port: 8080
+      targetPort: 8080
+
