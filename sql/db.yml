@@ -1,0 +1,15 @@
+# docker compose
+version: "3.7"
+
+services:
+  mysql:
+    image: mysql:latest
+    hostname: mysql
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=cloud_storage
+    volumes:
+      - ./cloud_storage.sql:/docker-entrypoint-initdb.d/init.sql
