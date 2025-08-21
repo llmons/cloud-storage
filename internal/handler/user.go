@@ -3,7 +3,20 @@
 package handler
 
 import (
+	"cloud-storage/internal/cache"
+	"cloud-storage/internal/dao"
+	"cloud-storage/internal/database"
+	"cloud-storage/internal/ecode"
+	"cloud-storage/internal/jwt"
 	"context"
+	"crypto/md5"
+	"errors"
+	"fmt"
+	"github.com/go-dev-frame/sponge/pkg/gin/middleware"
+	"github.com/go-dev-frame/sponge/pkg/logger"
+	"github.com/go-dev-frame/sponge/pkg/sgorm/query"
+	gjwt "github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm"
 
 	//"github.com/go-dev-frame/sponge/pkg/gin/middleware"
 
@@ -13,99 +26,120 @@ import (
 var _ cloud_storageV1.UserLogicer = (*userHandler)(nil)
 
 type userHandler struct {
-	// example:
-	// 	userDao dao.UserDao
+	userBasicDao dao.UserBasicDao
 }
 
 // NewUserHandler create a handler
 func NewUserHandler() cloud_storageV1.UserLogicer {
 	return &userHandler{
-		// example:
-		// 	userDao: dao.NewUserDao(
-		// 		database.GetDB(),
-		// 		cache.NewUserCache(database.GetCacheType()),
-		// 	),
+		userBasicDao: dao.NewUserBasicDao(
+			database.GetDB(),
+			cache.NewUserBasicCache(database.GetCacheType()),
+		),
 	}
 }
 
 // UserLogin 用户登录
 func (h *userHandler) UserLogin(ctx context.Context, req *cloud_storageV1.LoginRequest) (*cloud_storageV1.LoginReply, error) {
-	panic("implement me")
+	err := req.Validate()
+	if err != nil {
+		logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InvalidParams.Err()
+	}
 
-	// fill in the business logic code here
-	// example:
-	//
-	//	    err := req.Validate()
-	//	    if err != nil {
-	//		    logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
-	//		    return nil, ecode.InvalidParams.Err()
-	//	    }
-	//
-	//	    reply, err := h.userDao.UserLogin(ctx, &model.User{
-	//     	Name: req.Name,
-	//     	Password: req.Password,
-	//     })
-	//	    if err != nil {
-	//			logger.Warn("UserLogin error", logger.Err(err), middleware.CtxRequestIDField(ctx))
-	//			return nil, ecode.InternalServerError.Err()
-	//		}
-	//
-	//     return &cloud_storageV1.LoginReply{
-	//     	Token: reply.Token,
-	//     	RefreshToken: reply.RefreshToken,
-	//     }, nil
+	pwdMd5 := fmt.Sprintf("%x", md5.Sum([]byte(req.Password)))
+
+	user, err := h.userBasicDao.GetByCondition(ctx, &query.Conditions{
+		Columns: []query.Column{
+			{
+				Name:  "name",
+				Value: req.Name,
+			},
+			{
+				Name:  "password",
+				Value: pwdMd5,
+			},
+		},
+	})
+	if err != nil {
+		logger.Warn("UserLogin error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrUserLoginUser.Err()
+	}
+
+	claims := jwt.UserClaims{
+		ID:       user.ID,
+		Identity: user.Identity,
+		Name:     user.Name,
+	}
+	token := gjwt.NewWithClaims(gjwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString(jwt.Key)
+	if err != nil {
+		logger.Warn("Failed to sign token", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrUserLoginUser.Err()
+	}
+
+	return &cloud_storageV1.LoginReply{
+		Token:        signedToken,
+		RefreshToken: "",
+	}, nil
 }
 
 // UserDetail 用户详情
 func (h *userHandler) UserDetail(ctx context.Context, req *cloud_storageV1.UserDetailRequest) (*cloud_storageV1.UserDetailReply, error) {
-	panic("implement me")
+	err := req.Validate()
+	if err != nil {
+		logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InvalidParams.Err()
+	}
 
-	// fill in the business logic code here
-	// example:
-	//
-	//	    err := req.Validate()
-	//	    if err != nil {
-	//		    logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
-	//		    return nil, ecode.InvalidParams.Err()
-	//	    }
-	//
-	//	    reply, err := h.userDao.UserDetail(ctx, &model.User{
-	//     	Identity: req.Identity,
-	//     })
-	//	    if err != nil {
-	//			logger.Warn("UserDetail error", logger.Err(err), middleware.CtxRequestIDField(ctx))
-	//			return nil, ecode.InternalServerError.Err()
-	//		}
-	//
-	//     return &cloud_storageV1.UserDetailReply{
-	//     	Name: reply.Name,
-	//     	Email: reply.Email,
-	//     }, nil
+	user, err := h.userBasicDao.GetByCondition(ctx, &query.Conditions{
+		Columns: []query.Column{
+			{
+				Name:  "identity",
+				Value: req.Identity,
+			},
+		},
+	})
+	if err != nil {
+		logger.Warn("UserDetail error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrUserDetailUser.Err()
+	}
+
+	return &cloud_storageV1.UserDetailReply{
+		Name:  user.Name,
+		Email: user.Email,
+	}, nil
 }
 
 // MailCodeSendRegister 验证码发送
 func (h *userHandler) MailCodeSendRegister(ctx context.Context, req *cloud_storageV1.MailCodeSendRequest) (*cloud_storageV1.MailCodeSendReply, error) {
-	panic("implement me")
+	err := req.Validate()
+	if err != nil {
+		logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InvalidParams.Err()
+	}
 
-	// fill in the business logic code here
-	// example:
-	//
-	//	    err := req.Validate()
-	//	    if err != nil {
-	//		    logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
-	//		    return nil, ecode.InvalidParams.Err()
-	//	    }
-	//
-	//	    reply, err := h.userDao.MailCodeSendRegister(ctx, &model.User{
-	//     	Email: req.Email,
-	//     })
-	//	    if err != nil {
-	//			logger.Warn("MailCodeSendRegister error", logger.Err(err), middleware.CtxRequestIDField(ctx))
-	//			return nil, ecode.InternalServerError.Err()
-	//		}
-	//
-	//     return &cloud_storageV1.MailCodeSendReply{
-	//     }, nil
+	user, err := h.userBasicDao.GetByCondition(ctx, &query.Conditions{
+		Columns: []query.Column{
+			{
+				Name:  "email",
+				Value: req.Email,
+			},
+		},
+	})
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Warn("MailCodeSendRegister error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrUserLoginUser.Err()
+	}
+
+	if user != nil {
+		logger.Warn("MailCodeSendRegister error", logger.Err(ecode.ErrUserExistsUser.Err()), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrUserExistsUser.Err()
+	}
+
+	logger.Debug("MailCodeSendRegister", logger.String("code", "123456"), middleware.CtxRequestIDField(ctx))
+
+	return &cloud_storageV1.MailCodeSendReply{}, nil
 }
 
 // UserRegister 用户注册

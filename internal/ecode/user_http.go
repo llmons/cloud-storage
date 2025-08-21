@@ -19,5 +19,5 @@ var (
 	ErrUserRegisterUser         = errcode.NewError(userBaseCode+4, "failed to UserRegister "+userName)
 	ErrRefreshAuthorizationUser = errcode.NewError(userBaseCode+5, "failed to RefreshAuthorization "+userName)
 
-	// error codes are globally unique, adding 1 to the previous error code
+	ErrUserExistsUser = errcode.NewError(userBaseCode+6, "user already exists "+userName)
 )
