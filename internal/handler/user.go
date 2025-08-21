@@ -4,6 +4,7 @@ package handler
 
 import (
 	"cloud-storage/internal/cache"
+	"cloud-storage/internal/constants"
 	"cloud-storage/internal/dao"
 	"cloud-storage/internal/database"
 	"cloud-storage/internal/ecode"
@@ -17,6 +18,7 @@ import (
 	"github.com/go-dev-frame/sponge/pkg/sgorm/query"
 	gjwt "github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
+	"time"
 
 	//"github.com/go-dev-frame/sponge/pkg/gin/middleware"
 
@@ -132,12 +134,20 @@ func (h *userHandler) MailCodeSendRegister(ctx context.Context, req *cloud_stora
 		return nil, ecode.ErrUserLoginUser.Err()
 	}
 
+	// User Already Exists
 	if user != nil {
 		logger.Warn("MailCodeSendRegister error", logger.Err(ecode.ErrUserExistsUser.Err()), middleware.CtxRequestIDField(ctx))
 		return nil, ecode.ErrUserExistsUser.Err()
 	}
 
-	logger.Debug("MailCodeSendRegister", logger.String("code", "123456"), middleware.CtxRequestIDField(ctx))
+	code := "123456"
+	_, err = database.GetRedisCli().Set(ctx, req.Email, code, time.Second*constants.CodeExpire).Result()
+	if err != nil {
+		logger.Warn("Failed to set code in Redis", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrMailCodeSendRegisterUser.Err()
+	}
+
+	logger.Debug("MailCodeSendRegister", logger.String("code", code), middleware.CtxRequestIDField(ctx))
 
 	return &cloud_storageV1.MailCodeSendReply{}, nil
 }
