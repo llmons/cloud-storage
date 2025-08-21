@@ -9,10 +9,12 @@ import (
 	"cloud-storage/internal/database"
 	"cloud-storage/internal/ecode"
 	"cloud-storage/internal/jwt"
+	"cloud-storage/internal/model"
 	"context"
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"github.com/duke-git/lancet/v2/random"
 	"github.com/go-dev-frame/sponge/pkg/gin/middleware"
 	"github.com/go-dev-frame/sponge/pkg/logger"
 	"github.com/go-dev-frame/sponge/pkg/sgorm/query"
@@ -121,6 +123,7 @@ func (h *userHandler) MailCodeSendRegister(ctx context.Context, req *cloud_stora
 		return nil, ecode.InvalidParams.Err()
 	}
 
+	// Check if the email is already registered
 	user, err := h.userBasicDao.GetByCondition(ctx, &query.Conditions{
 		Columns: []query.Column{
 			{
@@ -133,13 +136,12 @@ func (h *userHandler) MailCodeSendRegister(ctx context.Context, req *cloud_stora
 		logger.Warn("MailCodeSendRegister error", logger.Err(err), middleware.CtxRequestIDField(ctx))
 		return nil, ecode.ErrUserLoginUser.Err()
 	}
-
-	// User Already Exists
 	if user != nil {
 		logger.Warn("MailCodeSendRegister error", logger.Err(ecode.ErrUserExistsUser.Err()), middleware.CtxRequestIDField(ctx))
 		return nil, ecode.ErrUserExistsUser.Err()
 	}
 
+	// Generate code
 	code := "123456"
 	_, err = database.GetRedisCli().Set(ctx, req.Email, code, time.Second*constants.CodeExpire).Result()
 	if err != nil {
@@ -154,30 +156,59 @@ func (h *userHandler) MailCodeSendRegister(ctx context.Context, req *cloud_stora
 
 // UserRegister 用户注册
 func (h *userHandler) UserRegister(ctx context.Context, req *cloud_storageV1.UserRegisterRequest) (*cloud_storageV1.UserRegisterReply, error) {
-	panic("implement me")
+	err := req.Validate()
+	if err != nil {
+		logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InvalidParams.Err()
+	}
 
-	// fill in the business logic code here
-	// example:
-	//
-	//	    err := req.Validate()
-	//	    if err != nil {
-	//		    logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
-	//		    return nil, ecode.InvalidParams.Err()
-	//	    }
-	//
-	//	    reply, err := h.userDao.UserRegister(ctx, &model.User{
-	//     	Name: req.Name,
-	//     	Password: req.Password,
-	//     	Email: req.Email,
-	//     	Code: req.Code,
-	//     })
-	//	    if err != nil {
-	//			logger.Warn("UserRegister error", logger.Err(err), middleware.CtxRequestIDField(ctx))
-	//			return nil, ecode.InternalServerError.Err()
-	//		}
-	//
-	//     return &cloud_storageV1.UserRegisterReply{
-	//     }, nil
+	// Check if the code is valid
+	code, err := database.GetRedisCli().Get(ctx, req.Email).Result()
+	if err != nil {
+		logger.Warn("Failed to get code from Redis", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrMailCodeSendRegisterUser.Err()
+	}
+	if code != req.Code {
+		logger.Warn("Invalid code", logger.String("code", code), logger.String("reqCode", req.Code), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrMailCodeSendRegisterUser.Err()
+	}
+
+	// Check if the user already exists
+	user, err := h.userBasicDao.GetByCondition(ctx, &query.Conditions{
+		Columns: []query.Column{
+			{
+				Name:  "name",
+				Value: req.Name,
+			},
+		},
+	})
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Warn("UserRegister error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrUserRegisterUser.Err()
+	}
+	if user != nil {
+		logger.Warn("UserRegister error", logger.Err(ecode.ErrUserExistsUser.Err()), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrUserExistsUser.Err()
+	}
+
+	// Create user
+	uuid, err := random.UUIdV4()
+	if err != nil {
+		logger.Warn("Failed to generate UUID", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InternalServerError.Err()
+	}
+	err = h.userBasicDao.Create(ctx, &model.UserBasic{
+		Identity: uuid,
+		Name:     req.Name,
+		Password: req.Password,
+		Email:    req.Email,
+	})
+	if err != nil {
+		logger.Warn("UserRegister error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InternalServerError.Err()
+	}
+
+	return &cloud_storageV1.UserRegisterReply{}, nil
 }
 
 // RefreshAuthorization 刷新Authorization
