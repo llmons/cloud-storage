@@ -1016,10 +1016,11 @@ const file_api_cloud_storage_v1_file_proto_rawDesc = "" +
 	"\x0fFileUploadReply\x12\x1a\n" +
 	"\bidentity\x18\x01 \x01(\tR\bidentity\x12\x10\n" +
 	"\x03ext\x18\x02 \x01(\tR\x03ext\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name2\xfb\x05\n" +
-	"\x04file\x12K\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name2\x86\x06\n" +
+	"\x04file\x12V\n" +
 	"\n" +
-	"FileUpload\x12\x12.FileUploadRequest\x1a\x10.FileUploadReply\"\x17\x82\xd3\xe4\x93\x02\x11:\x01*\"\f/file/upload\x12l\n" +
+	"FileUpload\x12\x12.FileUploadRequest\x1a\x10.FileUploadReply\"\"\x82\xd3\xe4\x93\x02\x1c\n" +
+	"\t[no_bind]:\x01*\"\f/file/upload\x12l\n" +
 	"\x12UserRepositorySave\x12\x1a.UserRepositorySaveRequest\x1a\x18.UserRepositorySaveReply\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/user/repository/save\x12T\n" +
 	"\fUserFileList\x12\x14.UserFileListRequest\x1a\x12.UserFileListReply\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/user/file/list\x12\\\n" +
 	"\x0eUserFolderList\x12\x16.UserFolderListRequest\x1a\x14.UserFolderListReply\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/user/folder/list\x12m\n" +

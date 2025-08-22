@@ -3,7 +3,23 @@
 package handler
 
 import (
+	"cloud-storage/internal/cache"
+	"cloud-storage/internal/dao"
+	"cloud-storage/internal/database"
+	"cloud-storage/internal/ecode"
+	"cloud-storage/internal/model"
 	"context"
+	"crypto/md5"
+	"errors"
+	"fmt"
+	"github.com/duke-git/lancet/v2/random"
+	"github.com/go-dev-frame/sponge/pkg/gin/middleware"
+	"github.com/go-dev-frame/sponge/pkg/logger"
+	"github.com/go-dev-frame/sponge/pkg/sgorm/query"
+	"gorm.io/gorm"
+	"mime/multipart"
+	"os"
+	"path/filepath"
 
 	//"github.com/go-dev-frame/sponge/pkg/gin/middleware"
 
@@ -13,51 +29,104 @@ import (
 var _ cloud_storageV1.FileLogicer = (*fileHandler)(nil)
 
 type fileHandler struct {
-	// example:
-	// 	fileDao dao.FileDao
+	rpDao dao.RepositoryPoolDao
 }
 
 // NewFileHandler create a handler
 func NewFileHandler() cloud_storageV1.FileLogicer {
 	return &fileHandler{
-		// example:
-		// 	fileDao: dao.NewFileDao(
-		// 		database.GetDB(),
-		// 		cache.NewFileCache(database.GetCacheType()),
-		// 	),
+		rpDao: dao.NewRepositoryPoolDao(
+			database.GetDB(),
+			cache.NewRepositoryPoolCache(database.GetCacheType()),
+		),
 	}
 }
 
 // FileUpload 文件上传
 func (h *fileHandler) FileUpload(ctx context.Context, req *cloud_storageV1.FileUploadRequest) (*cloud_storageV1.FileUploadReply, error) {
-	panic("implement me")
+	c, ctx := middleware.AdaptCtx(ctx)
+	err := req.Validate()
+	if err != nil {
+		logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InvalidParams.Err()
+	}
 
-	// fill in the business logic code here
-	// example:
-	//
-	//	    err := req.Validate()
-	//	    if err != nil {
-	//		    logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
-	//		    return nil, ecode.InvalidParams.Err()
-	//	    }
-	//
-	//	    reply, err := h.fileDao.FileUpload(ctx, &model.File{
-	//     	Hash: req.Hash,
-	//     	Name: req.Name,
-	//     	Ext: req.Ext,
-	//     	Size: req.Size,
-	//     	Path: req.Path,
-	//     })
-	//	    if err != nil {
-	//			logger.Warn("FileUpload error", logger.Err(err), middleware.CtxRequestIDField(ctx))
-	//			return nil, ecode.InternalServerError.Err()
-	//		}
-	//
-	//     return &cloud_storageV1.FileUploadReply{
-	//     	Identity: reply.Identity,
-	//     	Ext: reply.Ext,
-	//     	Name: reply.Name,
-	//     }, nil
+	file, fileHeader, err := c.Request.FormFile("file")
+	if err != nil {
+		logger.Warn("FormFile error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrFileUploadFile.Err()
+	}
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+			logger.Warn("File close error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		}
+	}(file)
+
+	// Check if the file is existing
+	bytes := make([]byte, fileHeader.Size)
+	if _, err := file.Read(bytes); err != nil {
+		logger.Warn("File read error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrFileUploadFile.Err()
+	}
+	hash := fmt.Sprintf("%x", md5.Sum(bytes))
+	rp, err := h.rpDao.GetByCondition(ctx, &query.Conditions{
+		Columns: []query.Column{
+			{
+				Name:  "hash",
+				Value: hash,
+			},
+		},
+	})
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Warn("FileUpload error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrFileUploadFile.Err()
+	}
+	if rp != nil {
+		logger.Info("File already exists", logger.String("hash", hash), middleware.CtxRequestIDField(ctx))
+		return &cloud_storageV1.FileUploadReply{
+			Identity: rp.Identity,
+			Ext:      rp.Ext,
+			Name:     rp.Name,
+		}, nil
+	}
+
+	// Save file
+	filename := filepath.Base(fileHeader.Filename)
+	joinedPath := filepath.Join("tmp", "cloud_storage", filename)
+	if err := os.MkdirAll(filepath.Dir(joinedPath), os.ModePerm); err != nil {
+		logger.Warn("MkdirAll error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrFileUploadFile.Err()
+	}
+	if err := c.SaveUploadedFile(fileHeader, joinedPath); err != nil {
+		logger.Warn("SaveUploadedFile error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrFileUploadFile.Err()
+	}
+
+	// Create RepositoryPool
+	uuid, err := random.UUIdV4()
+	if err != nil {
+		logger.Warn("UUIdV4 error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrFileUploadFile.Err()
+	}
+	rp = &model.RepositoryPool{
+		Identity: uuid,
+		Hash:     hash,
+		Name:     filename,
+		Ext:      filepath.Ext(fileHeader.Filename),
+		Size:     int(fileHeader.Size),
+		Path:     joinedPath,
+	}
+	if err := h.rpDao.Create(ctx, rp); err != nil {
+		logger.Warn("Create RepositoryPool error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrFileUploadFile.Err()
+	}
+
+	return &cloud_storageV1.FileUploadReply{
+		Identity: rp.Identity,
+		Ext:      rp.Ext,
+		Name:     filename,
+	}, nil
 }
 
 // UserRepositorySave 用户文件的关联存储

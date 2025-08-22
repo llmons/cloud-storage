@@ -12,6 +12,7 @@ service file {
     option (google.api.http) = {
       post: "/file/upload"
       body: "*"
+      selector: "[no_bind]"
     };
   }
 
