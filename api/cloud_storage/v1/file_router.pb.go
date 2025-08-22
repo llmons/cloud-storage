@@ -181,20 +181,8 @@ func (r *fileRouter) FileUpload_0(c *gin.Context) {
 
 func (r *fileRouter) UserRepositorySave_0(c *gin.Context) {
 	req := &UserRepositorySaveRequest{}
-	var err error
 
-	if err = c.ShouldBindJSON(req); err != nil {
-		r.zapLog.Warn("ShouldBindJSON error", zap.Error(err), middleware.GCtxRequestIDField(c))
-		r.iResponse.ParamError(c, err)
-		return
-	}
-
-	var ctx context.Context
-	if r.wrapCtxFn != nil {
-		ctx = r.wrapCtxFn(c)
-	} else {
-		ctx = middleware.WrapCtx(c)
-	}
+	var ctx context.Context = c
 
 	out, err := r.iLogic.UserRepositorySave(ctx, req)
 	if err != nil {

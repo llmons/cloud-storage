@@ -21,6 +21,7 @@ service file {
     option (google.api.http) = {
       post: "/user/repository/save"
       body: "*"
+      selector: "[no_bind]"
     };
   }
 

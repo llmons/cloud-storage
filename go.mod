@@ -7,7 +7,6 @@ require (
 	github.com/duke-git/lancet/v2 v2.3.7
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-dev-frame/sponge v1.14.4
-	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/sync v0.12.0
@@ -48,6 +47,7 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
