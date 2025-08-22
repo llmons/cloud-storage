@@ -30,6 +30,7 @@ service file {
     option (google.api.http) = {
       post: "/user/file/list"
       body: "*"
+      selector: "[no_bind]"
     };
   }
 

@@ -177,31 +177,47 @@ func (h *fileHandler) UserRepositorySave(ctx context.Context, req *cloud_storage
 
 // UserFileList 用户文件列表
 func (h *fileHandler) UserFileList(ctx context.Context, req *cloud_storageV1.UserFileListRequest) (*cloud_storageV1.UserFileListReply, error) {
-	panic("implement me")
+	c, ctx := middleware.AdaptCtx(ctx)
+	err := req.Validate()
+	if err != nil {
+		logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InvalidParams.Err()
+	}
 
-	// fill in the business logic code here
-	// example:
-	//
-	//	    err := req.Validate()
-	//	    if err != nil {
-	//		    logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
-	//		    return nil, ecode.InvalidParams.Err()
-	//	    }
-	//
-	//	    reply, err := h.fileDao.UserFileList(ctx, &model.File{
-	//     	Identity: req.Identity,
-	//     	Page: req.Page,
-	//     	Size: req.Size,
-	//     })
-	//	    if err != nil {
-	//			logger.Warn("UserFileList error", logger.Err(err), middleware.CtxRequestIDField(ctx))
-	//			return nil, ecode.InternalServerError.Err()
-	//		}
-	//
-	//     return &cloud_storageV1.UserFileListReply{
-	//     	List: reply.List,
-	//     	Count: reply.Count,
-	//     }, nil
+	claims, ok := middleware.GetClaims(c)
+	if !ok {
+		logger.Warn("GetClaims not ok", middleware.CtxRequestIDField(ctx))
+		return nil, ecode.Unauthorized.Err()
+	}
+	userIdentity, ok := claims.GetString("identity")
+	if !ok {
+		logger.Warn("GetString identity not ok", middleware.CtxRequestIDField(ctx))
+		return nil, ecode.Unauthorized.Err()
+	}
+	list, count, err := h.urDao.GetByColumns(ctx, &query.Params{
+		Page:  0,
+		Limit: 0,
+		Sort:  "",
+		Columns: []query.Column{
+			{
+				Name:  "parent_id",
+				Value: req.Identity,
+			},
+			{
+				Name:  "user_identity",
+				Value: userIdentity,
+			},
+		},
+	})
+	if err != nil {
+		logger.Warn("UserFileList error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InternalServerError.Err()
+	}
+
+	return &cloud_storageV1.UserFileListReply{
+		List:  reply.List,
+		Count: reply.Count,
+	}, nil
 }
 
 // UserFolderList 用户文件夹列表
