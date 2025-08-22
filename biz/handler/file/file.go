@@ -17,6 +17,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 var q = query.Q
@@ -148,9 +149,42 @@ func UserFileList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(file.UserFileListReply)
+	var uf []*file.UserFile
+	size := req.Size
+	if size <= 0 {
+		size = 10 // Default size
+	}
+	page := req.Page
+	if page <= 0 {
+		page = 1 // Default page
+	}
+	offset := (page - 1) * size
+	ID, err := strconv.Atoi(req.Identity)
+	if err != nil {
+		c.String(consts.StatusBadRequest, "invalid identity: %v", err)
+		return
+	}
+	err = q.UserRepository.
+		Select(q.UserRepository.ID, q.UserRepository.Identity, q.UserRepository.RepositoryIdentity, q.UserRepository.Ext,
+			q.UserRepository.Name, q.RepositoryPool.Path, q.RepositoryPool.Size).
+		Where(q.UserRepository.ParentID.Eq(int32(ID)), q.UserRepository.UserIdentity.Eq("")).
+		LeftJoin(q.RepositoryPool, q.UserRepository.UserIdentity.EqCol(q.RepositoryPool.Identity)).
+		Limit(int(size)).Offset(int(offset)).Scan(&uf)
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to query user repository: %v", err)
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	count, err := q.UserRepository.Where(q.UserRepository.ParentID.Eq(int32(ID)), q.UserRepository.UserIdentity.Eq("")).Count()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to count user repository: %v", err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, file.UserFileListReply{
+		List:  uf,
+		Count: count,
+	})
 }
 
 // UserFolderList .
@@ -180,9 +214,29 @@ func UserFileNameUpdate(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(file.UserFileNameUpdateReply)
+	sub := q.UserRepository.
+		Select(q.UserRepository.ParentID).
+		Where(q.UserRepository.Identity.Eq(req.Identity))
+	count, err := q.UserRepository.Where(q.UserRepository.Name.Eq(req.Name),
+		q.UserRepository.Columns(q.UserRepository.ParentID).Eq(sub)).
+		Count()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to count user repository: %v", err)
+		return
+	}
+	if count > 0 {
+		c.String(consts.StatusBadRequest, "file name already exists in the same folder")
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	_, err = q.UserRepository.Where(q.UserRepository.UserIdentity.Eq(req.Identity)).
+		Update(q.UserRepository.Name, req.Name)
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to update user repository name: %v", err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, file.UserFileNameUpdateReply{})
 }
 
 // UserFolderCreate .
@@ -196,9 +250,37 @@ func UserFolderCreate(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(file.UserFolderCreateReply)
+	count, err := q.UserRepository.Where(q.UserRepository.Name.Eq(req.Name),
+		q.UserRepository.ParentID.Eq(int32(req.ParentId))).
+		Count()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to count user repository: %v", err)
+		return
+	}
+	if count > 0 {
+		c.String(consts.StatusBadRequest, "file name already exists in the same folder")
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	uuid, err := random.UUIdV4()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to generate UUID: %v", err)
+		return
+	}
+	ur := entity.UserRepository{
+		Identity:     uuid,
+		UserIdentity: "",
+		ParentID:     int32(req.ParentId),
+		Name:         req.Name,
+	}
+	if err := q.UserRepository.Create(&ur); err != nil {
+		c.String(consts.StatusInternalServerError, "failed to create repository: %v", err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, file.UserFolderCreateReply{
+		Identity: uuid,
+	})
 }
 
 // UserFileDelete .
