@@ -15,14 +15,14 @@ const TableNameRepositoryPool = "repository_pool"
 // RepositoryPool mapped from table <repository_pool>
 type RepositoryPool struct {
 	ID        uint32         `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
-	Identity  *string        `gorm:"column:identity;type:varchar(36)" json:"identity"`
-	Hash      *string        `gorm:"column:hash;type:varchar(32);comment:文件的唯一标识" json:"hash"` // 文件的唯一标识
-	Name      *string        `gorm:"column:name;type:varchar(255)" json:"name"`
-	Ext       *string        `gorm:"column:ext;type:varchar(30);comment:文件扩展名" json:"ext"`   // 文件扩展名
-	Size      *int32         `gorm:"column:size;type:int;comment:文件大小" json:"size"`          // 文件大小
-	Path      *string        `gorm:"column:path;type:varchar(255);comment:文件路径" json:"path"` // 文件路径
-	CreatedAt *time.Time     `gorm:"column:created_at;type:datetime" json:"created_at"`
-	UpdatedAt *time.Time     `gorm:"column:updated_at;type:datetime" json:"updated_at"`
+	Identity  string         `gorm:"column:identity;type:varchar(36)" json:"identity"`
+	Hash      string         `gorm:"column:hash;type:varchar(32);comment:文件的唯一标识" json:"hash"` // 文件的唯一标识
+	Name      string         `gorm:"column:name;type:varchar(255)" json:"name"`
+	Ext       string         `gorm:"column:ext;type:varchar(30);comment:文件扩展名" json:"ext"`   // 文件扩展名
+	Size      int32          `gorm:"column:size;type:int;comment:文件大小" json:"size"`          // 文件大小
+	Path      string         `gorm:"column:path;type:varchar(255);comment:文件路径" json:"path"` // 文件路径
+	CreatedAt time.Time      `gorm:"column:created_at;type:datetime" json:"created_at"`
+	UpdatedAt time.Time      `gorm:"column:updated_at;type:datetime" json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;type:datetime" json:"deleted_at"`
 }
 

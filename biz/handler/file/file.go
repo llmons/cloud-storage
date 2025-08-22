@@ -3,7 +3,15 @@
 package file
 
 import (
+	"cloud-storage/biz/dal/entity"
+	"cloud-storage/biz/dal/query"
 	"context"
+	"crypto/md5"
+	"errors"
+	"fmt"
+	"github.com/duke-git/lancet/v2/random"
+	"gorm.io/gorm"
+	"mime/multipart"
 	"os"
 	"path/filepath"
 
@@ -11,6 +19,8 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
+
+var q = query.Q
 
 // FileUpload .
 // @router /file/upload [POST]
@@ -29,6 +39,36 @@ func FileUpload(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	// Check file if exists
+	bytes := make([]byte, fileHeader.Size)
+	openedFile, err := fileHeader.Open()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to open file: %v", err)
+		return
+	}
+	defer func(openedFile multipart.File) {
+		err := openedFile.Close()
+		if err != nil {
+			c.String(consts.StatusInternalServerError, "failed to close file: %v", err)
+		}
+	}(openedFile)
+	_, err = openedFile.Read(bytes)
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to read file: %v", err)
+		return
+	}
+	hash := fmt.Sprintf("%x", md5.Sum(bytes))
+	rp, err := q.RepositoryPool.Where(q.RepositoryPool.Hash.Eq(hash)).First()
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		c.String(consts.StatusInternalServerError, "failed to query repository pool: %v", err)
+		return
+	}
+	if rp != nil {
+		c.String(consts.StatusBadRequest, "file already exists: %s", rp.Hash)
+		return
+	}
+
+	// Save the file
 	filename := filepath.Base(fileHeader.Filename)
 	joinedPath := filepath.Join(os.TempDir(), "cloud_storage", filename)
 	if err := os.MkdirAll(filepath.Dir(joinedPath), os.ModePerm); err != nil {
@@ -40,9 +80,30 @@ func FileUpload(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(file.FileUploadReply)
+	// Create repository pool record
+	uuid, err := random.UUIdV4()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to generate UUID: %v", err)
+		return
+	}
+	rp = &entity.RepositoryPool{
+		Identity: uuid,
+		Hash:     hash,
+		Name:     filename,
+		Ext:      filepath.Ext(filename),
+		Size:     int32(fileHeader.Size),
+		Path:     joinedPath,
+	}
+	if err := q.RepositoryPool.Create(rp); err != nil {
+		c.String(consts.StatusInternalServerError, "failed to create repository pool: %v", err)
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(consts.StatusOK, &file.FileUploadReply{
+		Identity: rp.Identity,
+		Ext:      rp.Ext,
+		Name:     rp.Name,
+	})
 }
 
 // UserRepositorySave .

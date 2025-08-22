@@ -3,7 +3,6 @@
 package file
 
 import (
-	"cloud-storage/biz/mw"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -18,9 +17,7 @@ func _fileMw() []app.HandlerFunc {
 }
 
 func _fileuploadMw() []app.HandlerFunc {
-	return []app.HandlerFunc{
-		mw.JwtMiddleware.MiddlewareFunc(),
-	}
+	return nil
 }
 
 func _userMw() []app.HandlerFunc {
