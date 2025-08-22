@@ -8,7 +8,6 @@ import (
 	"cloud-storage/internal/dao"
 	"cloud-storage/internal/database"
 	"cloud-storage/internal/ecode"
-	"cloud-storage/internal/jwt"
 	"cloud-storage/internal/model"
 	"context"
 	"crypto/md5"
@@ -16,10 +15,11 @@ import (
 	"fmt"
 	"github.com/duke-git/lancet/v2/random"
 	"github.com/go-dev-frame/sponge/pkg/gin/middleware"
+	"github.com/go-dev-frame/sponge/pkg/jwt"
 	"github.com/go-dev-frame/sponge/pkg/logger"
 	"github.com/go-dev-frame/sponge/pkg/sgorm/query"
-	gjwt "github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
+	"strconv"
 	"time"
 
 	//"github.com/go-dev-frame/sponge/pkg/gin/middleware"
@@ -70,20 +70,19 @@ func (h *userHandler) UserLogin(ctx context.Context, req *cloud_storageV1.LoginR
 		return nil, ecode.ErrUserLoginUser.Err()
 	}
 
-	claims := jwt.UserClaims{
-		ID:       user.ID,
-		Identity: user.Identity,
-		Name:     user.Name,
-	}
-	token := gjwt.NewWithClaims(gjwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString(jwt.Key)
+	_, tokenStr, err := jwt.GenerateToken(strconv.FormatUint(user.ID, 10),
+		jwt.WithGenerateTokenSignKey([]byte(constants.JwtSecretKey)),
+		jwt.WithGenerateTokenFields(map[string]interface{}{
+			"identity": user.Identity,
+			"name":     user.Name,
+		}))
 	if err != nil {
 		logger.Warn("Failed to sign token", logger.Err(err), middleware.CtxRequestIDField(ctx))
 		return nil, ecode.ErrUserLoginUser.Err()
 	}
 
 	return &cloud_storageV1.LoginReply{
-		Token:        signedToken,
+		Token:        tokenStr,
 		RefreshToken: "",
 	}, nil
 }

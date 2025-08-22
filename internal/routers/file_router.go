@@ -3,8 +3,9 @@
 package routers
 
 import (
+	"cloud-storage/internal/constants"
 	"github.com/gin-gonic/gin"
-
+	"github.com/go-dev-frame/sponge/pkg/gin/middleware"
 	"github.com/go-dev-frame/sponge/pkg/logger"
 	//"github.com/go-dev-frame/sponge/pkg/middleware"
 
@@ -53,8 +54,8 @@ func fileMiddlewares(c *middlewareConfig) {
 	// c.setGroupPath("/api/v1/file", middleware.Auth())
 
 	// set up single route middleware, just uncomment the code and fill in the middlewares, nothing else needs to be changed
-	//c.setSinglePath("POST", "/file/upload", middleware.Auth())    // FileUpload 文件上传
-	//c.setSinglePath("POST", "/user/repository/save", middleware.Auth())    // UserRepositorySave 用户文件的关联存储
+	c.setSinglePath("POST", "/file/upload", middleware.Auth(middleware.WithSignKey([]byte(constants.JwtSecretKey))))          // FileUpload 文件上传
+	c.setSinglePath("POST", "/user/repository/save", middleware.Auth(middleware.WithSignKey([]byte(constants.JwtSecretKey)))) // UserRepositorySave 用户文件的关联存储
 	//c.setSinglePath("POST", "/user/file/list", middleware.Auth())    // UserFileList 用户文件列表
 	//c.setSinglePath("POST", "/user/folder/list", middleware.Auth())    // UserFolderList 用户文件夹列表
 	//c.setSinglePath("POST", "/user/file/name/update", middleware.Auth())    // UserFileNameUpdate 用户文件名称修改

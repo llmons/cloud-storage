@@ -30,6 +30,7 @@ var _ cloud_storageV1.FileLogicer = (*fileHandler)(nil)
 
 type fileHandler struct {
 	rpDao dao.RepositoryPoolDao
+	urDao dao.UserRepositoryDao
 }
 
 // NewFileHandler create a handler
@@ -38,6 +39,10 @@ func NewFileHandler() cloud_storageV1.FileLogicer {
 		rpDao: dao.NewRepositoryPoolDao(
 			database.GetDB(),
 			cache.NewRepositoryPoolCache(database.GetCacheType()),
+		),
+		urDao: dao.NewUserRepositoryDao(
+			database.GetDB(),
+			cache.NewUserRepositoryCache(database.GetCacheType()),
 		),
 	}
 }
@@ -131,30 +136,43 @@ func (h *fileHandler) FileUpload(ctx context.Context, req *cloud_storageV1.FileU
 
 // UserRepositorySave 用户文件的关联存储
 func (h *fileHandler) UserRepositorySave(ctx context.Context, req *cloud_storageV1.UserRepositorySaveRequest) (*cloud_storageV1.UserRepositorySaveReply, error) {
-	panic("implement me")
+	c, ctx := middleware.AdaptCtx(ctx)
+	err := req.Validate()
+	if err != nil {
+		logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.InvalidParams.Err()
+	}
 
-	// fill in the business logic code here
-	// example:
-	//
-	//	    err := req.Validate()
-	//	    if err != nil {
-	//		    logger.Warn("req.Validate error", logger.Err(err), logger.Any("req", req), middleware.CtxRequestIDField(ctx))
-	//		    return nil, ecode.InvalidParams.Err()
-	//	    }
-	//
-	//	    reply, err := h.fileDao.UserRepositorySave(ctx, &model.File{
-	//     	ParentId: req.ParentId,
-	//     	RepositoryIdentity: req.RepositoryIdentity,
-	//     	Ext: req.Ext,
-	//     	Name: req.Name,
-	//     })
-	//	    if err != nil {
-	//			logger.Warn("UserRepositorySave error", logger.Err(err), middleware.CtxRequestIDField(ctx))
-	//			return nil, ecode.InternalServerError.Err()
-	//		}
-	//
-	//     return &cloud_storageV1.UserRepositorySaveReply{
-	//     }, nil
+	uuid, err := random.UUIdV4()
+	if err != nil {
+		logger.Warn("UUIdV4 error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrUserRepositorySaveFile.Err()
+	}
+	claims, ok := middleware.GetClaims(c)
+	if !ok {
+		logger.Warn("GetClaims not ok", middleware.CtxRequestIDField(ctx))
+		return nil, ecode.Unauthorized.Err()
+	}
+	userIdentity, ok := claims.GetString("identity")
+	if !ok {
+		logger.Warn("GetString identity not ok", middleware.CtxRequestIDField(ctx))
+		return nil, ecode.Unauthorized.Err()
+	}
+	ur := &model.UserRepository{
+		Identity:           uuid,
+		UserIdentity:       userIdentity,
+		ParentID:           int(req.ParentId),
+		RepositoryIdentity: req.RepositoryIdentity,
+		Ext:                req.Ext,
+		Name:               req.Name,
+	}
+
+	if err := h.urDao.Create(ctx, ur); err != nil {
+		logger.Warn("UserRepositorySave error", logger.Err(err), middleware.CtxRequestIDField(ctx))
+		return nil, ecode.ErrUserRepositorySaveFile.Err()
+	}
+
+	return &cloud_storageV1.UserRepositorySaveReply{}, nil
 }
 
 // UserFileList 用户文件列表
