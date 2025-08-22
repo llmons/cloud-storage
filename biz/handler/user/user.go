@@ -3,12 +3,16 @@
 package user
 
 import (
-	"context"
-
+	"cloud-storage/biz/dal/query"
 	user "cloud-storage/biz/model/user"
+	"context"
+	"crypto/md5"
+	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
+
+var q = query.Q
 
 // UserLogin .
 // @router /user/login [POST]
@@ -21,9 +25,17 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(user.LoginReply)
+	pwdMd5 := fmt.Sprintf("%x", md5.Sum([]byte(req.Password)))
+	userBasic, err := q.UserBasic.Where(q.UserBasic.Name.Eq(req.Name), q.UserBasic.Password.Eq(pwdMd5)).First()
+	if err != nil {
+		c.String(consts.StatusBadRequest, "username or password error")
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(consts.StatusOK, &user.LoginReply{
+		Token:        *userBasic.Identity,
+		RefreshToken: "",
+	})
 }
 
 // UserDetail .

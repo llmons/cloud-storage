@@ -3,6 +3,8 @@
 package main
 
 import (
+	"cloud-storage/biz/dal"
+	"cloud-storage/biz/mw"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/hertz-contrib/logger/accesslog"
 )
@@ -10,6 +12,9 @@ import (
 func main() {
 	h := server.Default()
 	h.Use(accesslog.New())
+
+	dal.Init()
+	mw.InitJwt()
 
 	register(h)
 	h.Spin()
