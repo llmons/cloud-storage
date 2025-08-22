@@ -5,19 +5,18 @@ package file
 import (
 	"cloud-storage/biz/dal/entity"
 	"cloud-storage/biz/dal/query"
+	file "cloud-storage/biz/model/file"
 	"context"
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/duke-git/lancet/v2/random"
 	"gorm.io/gorm"
 	"mime/multipart"
 	"os"
 	"path/filepath"
-
-	file "cloud-storage/biz/model/file"
-	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 var q = query.Q
@@ -117,9 +116,25 @@ func UserRepositorySave(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(file.UserRepositorySaveReply)
+	uuid, err := random.UUIdV4()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to generate UUID: %v", err)
+		return
+	}
+	ur := entity.UserRepository{
+		Identity:           uuid,
+		UserIdentity:       "",
+		ParentID:           int32(req.ParentId),
+		RepositoryIdentity: req.RepositoryIdentity,
+		Ext:                req.Ext,
+		Name:               req.Name,
+	}
+	if err := q.UserRepository.Create(&ur); err != nil {
+		c.String(consts.StatusInternalServerError, "failed to create repository: %v", err)
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(consts.StatusOK, file.UserRepositorySaveReply{})
 }
 
 // UserFileList .

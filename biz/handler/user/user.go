@@ -33,7 +33,7 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 	}
 
 	c.JSON(consts.StatusOK, &user.LoginReply{
-		Token:        *userBasic.Identity,
+		Token:        userBasic.Identity,
 		RefreshToken: "",
 	})
 }
