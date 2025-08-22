@@ -93,7 +93,7 @@ func (h *fileHandler) FileUpload(ctx context.Context, req *cloud_storageV1.FileU
 
 	// Save file
 	filename := filepath.Base(fileHeader.Filename)
-	joinedPath := filepath.Join("tmp", "cloud_storage", filename)
+	joinedPath := filepath.Join(os.TempDir(), "cloud_storage", filename)
 	if err := os.MkdirAll(filepath.Dir(joinedPath), os.ModePerm); err != nil {
 		logger.Warn("MkdirAll error", logger.Err(err), middleware.CtxRequestIDField(ctx))
 		return nil, ecode.ErrFileUploadFile.Err()
