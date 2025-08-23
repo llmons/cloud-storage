@@ -10,14 +10,15 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	"github.com/duke-git/lancet/v2/random"
-	"gorm.io/gorm"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/duke-git/lancet/v2/random"
+	"gorm.io/gorm"
 )
 
 var q = query.Q
@@ -164,18 +165,19 @@ func UserFileList(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, "invalid identity: %v", err)
 		return
 	}
-	err = q.UserRepository.
-		Select(q.UserRepository.ID, q.UserRepository.Identity, q.UserRepository.RepositoryIdentity, q.UserRepository.Ext,
-			q.UserRepository.Name, q.RepositoryPool.Path, q.RepositoryPool.Size).
-		Where(q.UserRepository.ParentID.Eq(int32(ID)), q.UserRepository.UserIdentity.Eq("")).
-		LeftJoin(q.RepositoryPool, q.UserRepository.UserIdentity.EqCol(q.RepositoryPool.Identity)).
+
+	urQ := q.UserRepository
+	err = urQ.Select(urQ.ID, urQ.Identity, urQ.RepositoryIdentity, urQ.Ext,
+		urQ.Name, q.RepositoryPool.Path, q.RepositoryPool.Size).
+		Where(urQ.ParentID.Eq(int32(ID)), urQ.UserIdentity.Eq("")).
+		LeftJoin(q.RepositoryPool, urQ.UserIdentity.EqCol(q.RepositoryPool.Identity)).
 		Limit(int(size)).Offset(int(offset)).Scan(&uf)
 	if err != nil {
 		c.String(consts.StatusInternalServerError, "failed to query user repository: %v", err)
 		return
 	}
 
-	count, err := q.UserRepository.Where(q.UserRepository.ParentID.Eq(int32(ID)), q.UserRepository.UserIdentity.Eq("")).Count()
+	count, err := urQ.Where(urQ.ParentID.Eq(int32(ID)), urQ.UserIdentity.Eq("")).Count()
 	if err != nil {
 		c.String(consts.StatusInternalServerError, "failed to count user repository: %v", err)
 		return
@@ -294,9 +296,14 @@ func UserFileDelete(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(file.UserFileDeleteReply)
+	urQ := q.UserRepository
+	_, err = urQ.Where(urQ.UserIdentity.Eq(""), urQ.Identity.Eq(req.Identity)).Delete()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to delete user repository: %v", err)
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(consts.StatusOK, file.UserFileDeleteReply{})
 }
 
 // UserFileMove .
@@ -310,7 +317,22 @@ func UserFileMove(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(file.UserFileMoveReply)
+	urQ := q.UserRepository
+	ur, err := urQ.Where(urQ.Identity.Eq(req.ParentIdentity), urQ.UserIdentity.Eq("")).First()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to query parent folder: %v", err)
+		return
+	}
+	if ur == nil {
+		c.String(consts.StatusBadRequest, "parent folder does not exist")
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	_, err = urQ.Where(urQ.Identity.Eq(req.Identity)).Update(urQ.ParentID, ur.ID)
+	if err != nil {
+		c.String(consts.StatusInternalServerError, "failed to update user repository parent ID: %v", err)
+		return
+	}
+
+	c.JSON(consts.StatusOK, file.UserFileMoveReply{})
 }
