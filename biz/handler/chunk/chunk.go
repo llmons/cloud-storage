@@ -3,12 +3,16 @@
 package chunk
 
 import (
+	"cloud-storage/biz/dal/query"
 	"context"
 
 	chunk "cloud-storage/biz/model/chunk"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
+
+var q = query.Q
 
 // FileUploadPrepare .
 // @router /file/upload/prepare [POST]
@@ -21,9 +25,18 @@ func FileUploadPrepare(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(chunk.FileUploadPrepareReply)
+	rp, err := q.RepositoryPool.Where(q.RepositoryPool.Hash.Eq(req.Md5)).First()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, err.Error())
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	var reply chunk.FileUploadPrepareReply
+	if rp != nil {
+		reply.Identity = rp.Identity
+	}
+
+	c.JSON(consts.StatusOK, &reply)
 }
 
 // FileUploadChunk .
@@ -32,6 +45,12 @@ func FileUploadChunk(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req chunk.FileUploadChunkRequest
 	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+
+	_, err = c.FormFile("file")
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
