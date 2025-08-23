@@ -3,12 +3,17 @@
 package share
 
 import (
+	"cloud-storage/biz/dal/entity"
+	"cloud-storage/biz/dal/query"
+	share "cloud-storage/biz/model/share"
 	"context"
 
-	share "cloud-storage/biz/model/share"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/duke-git/lancet/v2/random"
 )
+
+var q = query.Q
 
 // ShareBasicDetail .
 // @router /share/basic/detail [GET]
@@ -21,9 +26,22 @@ func ShareBasicDetail(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(share.ShareBasicDetailReply)
+	sbQ := q.ShareBasic
+	rpQ := q.RepositoryPool
+	_, err = sbQ.Where(sbQ.Identity.Eq(req.Identity)).Update(sbQ.ClickNum, sbQ.ClickNum.Add(1))
+	if err != nil {
+		c.String(consts.StatusInternalServerError, err.Error())
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	var reply share.ShareBasicDetailReply
+	err = sbQ.LeftJoin(rpQ, sbQ.RepositoryIdentity.EqCol(rpQ.Identity)).Where(sbQ.Identity.Eq(req.Identity)).Scan(&reply)
+	if err != nil {
+		c.String(consts.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(consts.StatusOK, &reply)
 }
 
 // ShareBasicCreate .
@@ -37,9 +55,26 @@ func ShareBasicCreate(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(share.ShareBasicCreateReply)
+	uuid, err := random.UUIdV4()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, err.Error())
+		return
+	}
+	sb := entity.ShareBasic{
+		Identity:               uuid,
+		UserIdentity:           "",
+		UserRepositoryIdentity: req.UserRepositoryIdentity,
+		ExpiredTime:            req.ExpiredTime,
+		ClickNum:               0,
+	}
+	if err := q.ShareBasic.Create(&sb); err != nil {
+		c.String(consts.StatusInternalServerError, err.Error())
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(consts.StatusOK, share.ShareBasicCreateReply{
+		Identity: uuid,
+	})
 }
 
 // ShareBasicSave .
@@ -53,7 +88,32 @@ func ShareBasicSave(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(share.ShareBasicSaveReply)
+	rp, err := q.RepositoryPool.Where(q.RepositoryPool.Identity.Eq(req.RepositoryIdentity)).First()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, err.Error())
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	uuid, err := random.UUIdV4()
+	if err != nil {
+		c.String(consts.StatusInternalServerError, err.Error())
+		return
+	}
+	ur := entity.UserRepository{
+		Identity:           uuid,
+		UserIdentity:       "",
+		ParentID:           int32(req.ParentId),
+		RepositoryIdentity: req.RepositoryIdentity,
+		Ext:                rp.Ext,
+		Name:               rp.Name,
+	}
+
+	if err := q.UserRepository.Create(&ur); err != nil {
+		c.String(consts.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(consts.StatusOK, share.ShareBasicSaveReply{
+		Identity: uuid,
+	})
 }
